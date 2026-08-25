@@ -1,3 +1,10 @@
+## [0.2.1](https://github.com/maxgfr/codexify/compare/v0.2.0...v0.2.1) (2026-08-25)
+
+
+### Bug Fixes
+
+* mark Ghostty tabs for notifications ([367a17b](https://github.com/maxgfr/codexify/commit/367a17b04d234ff9c5d54aae98533433578371a8))
+
 # [0.2.0](https://github.com/maxgfr/codexify/compare/v0.1.0...v0.2.0) (2026-08-25)
 
 
