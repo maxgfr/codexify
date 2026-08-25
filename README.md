@@ -71,6 +71,7 @@ codexify notify off
 `notify on` repairs both common causes of missing Action Required alerts:
 
 - it merges `agent-turn-complete` and `approval-requested` into `[tui].notifications` without removing custom events;
+- it sets Codex's terminal method to `bel` with condition `always`, so Ghostty marks the originating tab even when another tab is active;
 - it replaces fragile commands such as `notify = ["node", "~/.codex/notify.mjs"]` with the absolute installed path to `codexify notify emit`.
 
 It also appends an asynchronous `PermissionRequest` hook to `~/.codex/hooks.json`. The hook only displays a notification: it emits no allow/deny decision, so the normal approval prompt continues. Existing hooks and the previous `notify` callback (including Codex Desktop callbacks) are preserved; Codexify chains the callback while enabled and restores it on `notify off`.
@@ -79,13 +80,14 @@ Codex requires changed non-managed hooks to be reviewed. After enabling notifica
 
 ### Terminal support
 
-- Ghostty, iTerm2, and WezTerm: OSC 9 notifications.
+- Ghostty: a standalone BEL for tab attention plus an OSC 777 desktop notification.
+- iTerm2 and WezTerm: OSC 9 notifications.
 - Kitty: OSC 99 title/body notifications.
 - Terminal.app and other macOS terminals: Notification Center through `osascript`.
 - Linux: terminal protocol when detected, otherwise `notify-send`.
 - WSL: PowerShell notification fallback.
 
-Codexify discards payloads identified as sub-agent events to avoid notification storms. For Ghostty, ensure notifications are allowed for Ghostty in **System Settings → Notifications**, then run `codexify notify test` from the terminal.
+Codexify discards payloads identified as sub-agent events to avoid notification storms. `notify off` restores the previous notification method and focus condition exactly. For Ghostty, ensure notifications and badges are allowed for Ghostty in **System Settings → Notifications**, then run `codexify notify test` from the terminal. The bell marker remains visible on an unfocused tab until that tab receives focus.
 
 ## Keep awake
 

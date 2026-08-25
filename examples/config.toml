@@ -5,5 +5,5 @@ notify = ["/opt/homebrew/bin/codexify", "notify", "emit", "--source", "codex"]
 
 [tui]
 notifications = ["agent-turn-complete", "approval-requested"]
-notification_method = "auto"
-notification_condition = "unfocused"
+notification_method = "bel"
+notification_condition = "always"

@@ -26,7 +26,20 @@ pub fn on(paths: &Paths, executable: &std::path::Path) -> Result<()> {
         .get("tui")
         .and_then(|item| item.get("notifications"))
         .cloned();
+    let current_method = doc
+        .get("tui")
+        .and_then(|item| item.get("notification_method"))
+        .cloned();
+    let current_condition = doc
+        .get("tui")
+        .and_then(|item| item.get("notification_condition"))
+        .cloned();
     codex_config::capture(current_tui.as_ref(), &mut state.tui_notifications);
+    codex_config::capture(current_method.as_ref(), &mut state.tui_notification_method);
+    codex_config::capture(
+        current_condition.as_ref(),
+        &mut state.tui_notification_condition,
+    );
     let hooks = build_hook_document(paths, executable)?;
     state.notifications_enabled = true;
     state.save(paths)?;
@@ -39,8 +52,9 @@ pub fn on(paths: &Paths, executable: &std::path::Path) -> Result<()> {
     callback.push("codex");
     doc["notify"] = Item::Value(TomlValue::Array(callback));
 
-    let notifications = merged_notifications(current_tui.as_ref());
-    doc["tui"]["notifications"] = Item::Value(TomlValue::Array(notifications));
+    doc["tui"]["notifications"] = merged_notifications(current_tui.as_ref());
+    doc["tui"]["notification_method"] = codex_config::string_item("bel");
+    doc["tui"]["notification_condition"] = codex_config::string_item("always");
     codex_config::save(paths, &doc)?;
     write_hook_document(paths, &hooks)?;
     println!("Notifications enabled.");
@@ -48,7 +62,10 @@ pub fn on(paths: &Paths, executable: &std::path::Path) -> Result<()> {
     Ok(())
 }
 
-fn merged_notifications(item: Option<&Item>) -> Array {
+fn merged_notifications(item: Option<&Item>) -> Item {
+    if item.and_then(Item::as_bool) == Some(true) {
+        return item.cloned().expect("the notifications item is present");
+    }
     let mut values = Vec::new();
     if let Some(array) = item.and_then(Item::as_array) {
         for value in array.iter().filter_map(|value| value.as_str()) {
@@ -66,7 +83,7 @@ fn merged_notifications(item: Option<&Item>) -> Array {
     for value in values {
         result.push(value);
     }
-    result
+    Item::Value(TomlValue::Array(result))
 }
 
 pub fn off(paths: &Paths) -> Result<()> {
@@ -78,6 +95,18 @@ pub fn off(paths: &Paths) -> Result<()> {
         "tui",
         "notifications",
         &mut state.tui_notifications,
+    )?;
+    codex_config::restore_table_key(
+        &mut doc,
+        "tui",
+        "notification_method",
+        &mut state.tui_notification_method,
+    )?;
+    codex_config::restore_table_key(
+        &mut doc,
+        "tui",
+        "notification_condition",
+        &mut state.tui_notification_condition,
     )?;
     if !state.tui_table_existed
         && doc
@@ -118,6 +147,18 @@ pub fn status(paths: &Paths) -> Result<()> {
     println!("callback_absolute = {absolute}");
     println!("callback_contains_tilde = {has_tilde}");
     println!("permission_hook = {}", has_owned_hook(paths)?);
+    let method = doc
+        .get("tui")
+        .and_then(|item| item.get("notification_method"))
+        .and_then(Item::as_str)
+        .unwrap_or("auto");
+    let condition = doc
+        .get("tui")
+        .and_then(|item| item.get("notification_condition"))
+        .and_then(Item::as_str)
+        .unwrap_or("unfocused");
+    println!("notification_method = {method}");
+    println!("notification_condition = {condition}");
     Ok(())
 }
 
@@ -257,9 +298,8 @@ pub fn terminal_sequence(backend: &str, title: &str, body: &str) -> Option<Vec<u
     let title = sanitize(title);
     let body = sanitize(body);
     match backend {
-        "ghostty" | "iterm2" | "wezterm" => {
-            Some(format!("\x1b]9;{title}: {body}\x07").into_bytes())
-        }
+        "ghostty" => Some(format!("\x07\x1b]777;notify;{title};{body}\x1b\\").into_bytes()),
+        "iterm2" | "wezterm" => Some(format!("\x1b]9;{title}: {body}\x07").into_bytes()),
         "kitty" => Some(
             format!("\x1b]99;i=codexify:d=0;{title}\x1b\\\x1b]99;i=codexify:p=body;{body}\x1b\\")
                 .into_bytes(),
@@ -459,12 +499,22 @@ mod tests {
     #[test]
     fn osc9_sequences_are_exact() {
         let expected = b"\x1b]9;Codex: Done\x07".to_vec();
-        for backend in ["ghostty", "iterm2", "wezterm"] {
+        for backend in ["iterm2", "wezterm"] {
             assert_eq!(
                 terminal_sequence(backend, "Codex", "Done"),
                 Some(expected.clone())
             );
         }
+    }
+
+    #[test]
+    fn ghostty_sequence_marks_the_tab_and_sends_a_desktop_notification() {
+        // FR-002 Ghostty needs an independent BEL for tab attention; a BEL used
+        // only as an OSC terminator does not ring the terminal bell.
+        assert_eq!(
+            terminal_sequence("ghostty", "Codex", "Done"),
+            Some(b"\x07\x1b]777;notify;Codex;Done\x1b\\".to_vec())
+        );
     }
 
     #[test]

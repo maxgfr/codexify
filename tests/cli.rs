@@ -128,6 +128,11 @@ fn notification_on_repairs_action_required_and_is_reversible_and_idempotent() {
         events,
         ["agent-turn-complete", "custom-event", "approval-requested"]
     );
+    assert_eq!(doc["tui"]["notification_method"].as_str(), Some("bel"));
+    assert_eq!(
+        doc["tui"]["notification_condition"].as_str(),
+        Some("always")
+    );
 
     let hooks: Value =
         serde_json::from_slice(&fs::read(sandbox.codex.join("hooks.json")).unwrap()).unwrap();
@@ -166,6 +171,25 @@ fn notification_on_repairs_action_required_and_is_reversible_and_idempotent() {
     let restored: Value =
         serde_json::from_slice(&fs::read(sandbox.codex.join("hooks.json")).unwrap()).unwrap();
     assert_eq!(restored, original_hooks);
+}
+
+#[test]
+fn notification_on_preserves_all_events_when_notifications_are_true() {
+    let sandbox = Sandbox::new();
+    let original = "[tui]\nnotifications = true\n";
+    fs::write(sandbox.codex.join("config.toml"), original).unwrap();
+
+    sandbox.command().args(["notify", "on"]).assert().success();
+
+    let config = fs::read_to_string(sandbox.codex.join("config.toml")).unwrap();
+    let doc = config.parse::<toml_edit::DocumentMut>().unwrap();
+    assert_eq!(doc["tui"]["notifications"].as_bool(), Some(true));
+
+    sandbox.command().args(["notify", "off"]).assert().success();
+    assert_eq!(
+        fs::read_to_string(sandbox.codex.join("config.toml")).unwrap(),
+        original
+    );
 }
 
 #[test]
