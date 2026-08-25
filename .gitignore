@@ -1,0 +1,4 @@
+/target/
+.agents/verify/
+.DS_Store
+*.swp

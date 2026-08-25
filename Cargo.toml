@@ -1,0 +1,31 @@
+[package]
+name = "codexify"
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+description = "A practical Codex CLI toolbelt"
+repository = "https://github.com/maxgfr/codexify"
+rust-version = "1.85"
+
+[dependencies]
+anyhow = "1.0"
+chrono = { version = "0.4", default-features = false, features = ["clock"] }
+dirs = "6.0"
+libc = "0.2"
+regex = "1.11"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = { version = "1.0", features = ["preserve_order"] }
+shell-words = "1.1"
+tempfile = "3.20"
+toml = "0.9"
+toml_edit = { version = "0.23", features = ["serde"] }
+walkdir = "2.5"
+
+[dev-dependencies]
+assert_cmd = "2.0"
+predicates = "3.1"
+
+[profile.release]
+lto = true
+codegen-units = 1
+strip = true

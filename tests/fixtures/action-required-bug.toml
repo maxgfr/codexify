@@ -1,0 +1,7 @@
+# Regression: approval-requested was filtered and Node received a literal tilde path.
+notify = ["node", "~/.codex/notify.mjs"]
+custom = "keep"
+
+[tui]
+notifications = ["agent-turn-complete", "custom-event"]
+notification_method = "osc9"

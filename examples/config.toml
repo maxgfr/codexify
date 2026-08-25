@@ -1,0 +1,9 @@
+# Codexify preserves comments and unrelated values in ~/.codex/config.toml.
+model = "gpt-5.6"
+model_reasoning_effort = "medium"
+notify = ["/opt/homebrew/bin/codexify", "notify", "emit", "--source", "codex"]
+
+[tui]
+notifications = ["agent-turn-complete", "approval-requested"]
+notification_method = "auto"
+notification_condition = "unfocused"

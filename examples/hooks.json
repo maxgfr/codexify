@@ -1,0 +1,19 @@
+{
+  "description": "Codexify merges its handler beside existing user handlers.",
+  "hooks": {
+    "PermissionRequest": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/opt/homebrew/bin/codexify notify emit --source hook",
+            "async": true,
+            "timeout": 5,
+            "statusMessage": "Codexify Action Required notification"
+          }
+        ]
+      }
+    ]
+  }
+}
