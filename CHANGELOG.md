@@ -1,3 +1,10 @@
+# [0.2.0](https://github.com/maxgfr/codexify/compare/v0.1.0...v0.2.0) (2026-08-25)
+
+
+### Features
+
+* automate releases with semantic-release ([f6b29af](https://github.com/maxgfr/codexify/commit/f6b29af2e65f5f473d497c4612b1bca27e85213b))
+
 # Changelog
 
 All notable changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and semantic versioning.
