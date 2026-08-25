@@ -1,0 +1,66 @@
+name: Recover Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Version tag to reconcile, for example v0.2.0
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: semantic-release-${{ github.repository }}
+  cancel-in-progress: false
+
+jobs:
+  reconcile:
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.validate.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Validate requested version
+        id: validate
+        shell: bash
+        env:
+          RELEASE_TAG: ${{ inputs.tag }}
+        run: |
+          if [[ ! "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Expected a v<major>.<minor>.<patch> tag" >&2
+            exit 1
+          fi
+          crate_version=$(sed -n 's/^version = "\([^"]*\)"/\1/p' Cargo.toml | head -1)
+          test "$RELEASE_TAG" = "v$crate_version"
+          echo "tag=$RELEASE_TAG" >> "$GITHUB_OUTPUT"
+
+      - name: Reconcile tag and draft release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: ${{ steps.validate.outputs.tag }}
+        run: |
+          if git rev-parse --verify --quiet "refs/tags/$RELEASE_TAG" >/dev/null; then
+            test "$(git rev-list -n 1 "$RELEASE_TAG")" = "$GITHUB_SHA"
+          else
+            git tag "$RELEASE_TAG" "$GITHUB_SHA"
+            git push origin "refs/tags/$RELEASE_TAG"
+          fi
+
+          if ! gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            gh release create "$RELEASE_TAG" --draft --verify-tag \
+              --title "$RELEASE_TAG" --generate-notes
+          fi
+
+  artifacts:
+    needs: reconcile
+    permissions:
+      contents: write
+    uses: ./.github/workflows/release.yml
+    with:
+      tag: ${{ needs.reconcile.outputs.tag }}

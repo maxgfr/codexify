@@ -1,0 +1,60 @@
+name: Semantic Release
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+concurrency:
+  group: semantic-release-${{ github.repository }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    outputs:
+      published: ${{ steps.semantic.outputs.new_release_published }}
+      tag: ${{ steps.semantic.outputs.new_release_git_tag }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Verify
+        run: |
+          cargo fmt --all -- --check
+          cargo clippy --all-targets --all-features -- -D warnings
+          cargo test --all-targets --all-features --locked
+          cargo build --release --locked
+
+      - name: Semantic release
+        id: semantic
+        uses: cycjimmy/semantic-release-action@v6
+        with:
+          semantic_version: 25.0.9
+          extra_plugins: |
+            @semantic-release/changelog@7.0.0
+            @semantic-release/exec@7.1.0
+            @semantic-release/git@11.0.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  artifacts:
+    needs: release
+    if: needs.release.outputs.published == 'true'
+    permissions:
+      contents: write
+    uses: ./.github/workflows/release.yml
+    with:
+      tag: ${{ needs.release.outputs.tag }}

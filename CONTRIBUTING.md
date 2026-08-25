@@ -21,4 +21,11 @@ Tests must isolate `CODEX_HOME` and `CODEXIFY_STATE_DIR` in temporary directorie
 - Update README/help/examples when command behavior changes.
 - Run formatting, Clippy, tests, and a locked release build before submitting.
 
-Commits should be focused and use clear imperative messages. By contributing, you agree that your contribution is licensed under the MIT License.
+Commits must follow Conventional Commits because semantic-release derives the next version from them:
+
+- `feat:` creates a minor release;
+- `fix:` and `perf:` create a patch release;
+- a `BREAKING CHANGE:` footer creates a major release;
+- `docs:`, `test:`, `ci:`, `refactor:`, and `chore:` normally create no release.
+
+Keep commits focused and use an imperative subject. By contributing, you agree that your contribution is licensed under the MIT License.

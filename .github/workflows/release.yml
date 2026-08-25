@@ -3,6 +3,18 @@ name: Release
 on:
   push:
     tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing release tag to build and attach binaries for
+        required: true
+        type: string
+  workflow_call:
+    inputs:
+      tag:
+        description: Existing release tag to build and attach binaries for
+        required: true
+        type: string
 
 permissions:
   contents: write
@@ -12,11 +24,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.tag || github.ref }}
       - name: Match tag to crate version
         shell: bash
+        env:
+          RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
         run: |
           crate_version=$(sed -n 's/^version = "\([^"]*\)"/\1/p' Cargo.toml | head -1)
-          test "${GITHUB_REF_NAME}" = "v${crate_version}"
+          test "${RELEASE_TAG}" = "v${crate_version}"
 
   build:
     needs: validate-version
@@ -39,6 +55,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.tag || github.ref }}
       - uses: houseabsolute/actions-rust-cross@v1
         with:
           command: build
@@ -68,8 +86,10 @@ jobs:
           path: dist
       - name: Create combined checksums
         working-directory: dist
-        run: cat *.sha256 | sort > checksums.txt
+        run: cat -- *.sha256 | sort > checksums.txt
       - uses: softprops/action-gh-release@v2
         with:
-          generate_release_notes: true
+          tag_name: ${{ inputs.tag || github.ref_name }}
+          draft: false
+          fail_on_unmatched_files: true
           files: dist/*

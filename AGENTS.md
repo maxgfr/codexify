@@ -46,10 +46,12 @@ cargo build --release --locked
 
 ## Release process
 
-1. Add a changelog entry and set the crate version in `Cargo.toml`.
-2. Run all required gates on a clean tree.
-3. Commit and push `main`; confirm Linux and macOS CI are green.
-4. Tag exactly `v<crate-version>` and push the tag.
-5. The release workflow verifies tag/crate consistency, builds four binaries, writes `.sha256` files plus `checksums.txt`, and publishes the GitHub release.
-6. Update `maxgfr/homebrew-tap/Formula/codexify.rb` with the exact release URLs and SHA256 values, run `brew audit --strict`, install from the tap, and run `codexify doctor`.
-7. Confirm both repositories are clean and synchronized.
+Automated via semantic-release on every push to `main`:
+
+1. Use Conventional Commits. `feat:` releases a minor version, `fix:` and `perf:` release a patch, and a `BREAKING CHANGE:` footer releases a major version. Non-release commits such as `docs:`, `test:`, and `ci:` still run the workflow but do not publish.
+2. The semantic-release workflow runs every required Rust gate before analyzing commits.
+3. `.version-hook.sh` updates `Cargo.toml` and `Cargo.lock`; semantic-release updates `CHANGELOG.md`, creates the release commit, `v<crate-version>` tag, and a draft GitHub release.
+4. A successful semantic release calls `release.yml` synchronously. It verifies the tag/crate match, builds four binaries, writes `.sha256` files plus `checksums.txt`, attaches them, and only then publishes the release.
+5. `maxgfr/homebrew-tap` checks daily for the latest release and updates the formula. After release changes, run its updater manually when immediate distribution is required.
+
+Never edit the crate version or create a release tag manually for a normal release. `release.yml` retains a manual dispatch for rebuilding assets of an existing tag. If semantic-release fails after preparing the version or tag, run `recover-release.yml` manually with the expected `v<version>`; it reconciles the tag and draft release before rebuilding the assets.

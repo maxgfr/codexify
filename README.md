@@ -195,4 +195,6 @@ cargo test --all-features
 cargo build --release --locked
 ```
 
+Releases are automated with semantic-release on pushes to `main`. Conventional commits determine the version: `feat:` creates a minor release, `fix:` or `perf:` creates a patch, and a `BREAKING CHANGE:` footer creates a major release. Documentation, test, CI, refactor, and chore commits normally run the workflow without publishing. A release updates the crate version and changelog, creates the GitHub tag and a draft release, then builds all four platform binaries and publishes the release only after every artifact is attached. If a run fails after preparing a version or tag, use the manual **Recover Release** workflow with that `v<version>` tag.
+
 See [CONTRIBUTING.md](CONTRIBUTING.md) and [AGENTS.md](AGENTS.md). Codexify is MIT licensed.
