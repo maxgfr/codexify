@@ -259,14 +259,30 @@ fn chain_previous(paths: &Paths, payload: &str) {
 
 pub fn deliver(title: &str, body: &str) -> Result<()> {
     let backend = detect_backend();
-    if let Some(bytes) = terminal_sequence(&backend, title, body) {
-        if let Ok(mut tty) = OpenOptions::new().write(true).open("/dev/tty") {
-            tty.write_all(&bytes)?;
-            tty.flush()?;
-            return Ok(());
-        }
+    let mut tty = OpenOptions::new().write(true).open("/dev/tty").ok();
+    deliver_with(
+        &backend,
+        title,
+        body,
+        tty.as_mut().map(|tty| tty as &mut dyn Write),
+        || native_notification(title, body),
+    )
+}
+
+fn deliver_with(
+    backend: &str,
+    title: &str,
+    body: &str,
+    tty: Option<&mut dyn Write>,
+    native_notification: impl FnOnce() -> Result<()>,
+) -> Result<()> {
+    if let (Some(bytes), Some(tty)) = (terminal_sequence(backend, title, body), tty)
+        && tty.write_all(&bytes).and_then(|_| tty.flush()).is_ok()
+        && terminal_sequence_includes_notification(backend)
+    {
+        return Ok(());
     }
-    native_notification(title, body)
+    native_notification()
 }
 
 pub fn detect_backend() -> String {
@@ -304,8 +320,12 @@ pub fn terminal_sequence(backend: &str, title: &str, body: &str) -> Option<Vec<u
             format!("\x1b]99;i=codexify:d=0;{title}\x1b\\\x1b]99;i=codexify:p=body;{body}\x1b\\")
                 .into_bytes(),
         ),
-        _ => None,
+        _ => Some(b"\x07".to_vec()),
     }
+}
+
+fn terminal_sequence_includes_notification(backend: &str) -> bool {
+    matches!(backend, "ghostty" | "iterm2" | "wezterm" | "kitty")
 }
 
 fn sanitize(value: &str) -> String {
@@ -494,7 +514,26 @@ fn has_owned_hook(paths: &Paths) -> Result<bool> {
 
 #[cfg(test)]
 mod tests {
-    use super::{backend_for, native_command_spec, terminal_sequence};
+    use anyhow::Result;
+    use std::cell::Cell;
+    use std::io::{self, Write};
+
+    use super::{
+        backend_for, deliver_with, native_command_spec, terminal_sequence,
+        terminal_sequence_includes_notification,
+    };
+
+    struct FailingWriter;
+
+    impl Write for FailingWriter {
+        fn write(&mut self, _buffer: &[u8]) -> io::Result<usize> {
+            Err(io::Error::other("terminal disconnected"))
+        }
+
+        fn flush(&mut self) -> io::Result<()> {
+            Ok(())
+        }
+    }
 
     #[test]
     fn osc9_sequences_are_exact() {
@@ -515,6 +554,71 @@ mod tests {
             terminal_sequence("ghostty", "Codex", "Done"),
             Some(b"\x07\x1b]777;notify;Codex;Done\x1b\\".to_vec())
         );
+    }
+
+    #[test]
+    fn native_backends_still_receive_an_attention_bell() {
+        // FR-002 PermissionRequest hooks may run without TERM_PROGRAM, but the
+        // terminal must still receive BEL so its application badge is updated.
+        for backend in ["native", "terminal.app"] {
+            assert_eq!(
+                terminal_sequence(backend, "Codex", "Done"),
+                Some(b"\x07".to_vec())
+            );
+            assert!(!terminal_sequence_includes_notification(backend));
+        }
+    }
+
+    #[test]
+    fn terminal_protocols_do_not_duplicate_native_notifications() {
+        // FR-002 These protocols already carry the desktop notification; only
+        // BEL-only backends need the native notification fallback as well.
+        for backend in ["ghostty", "iterm2", "wezterm", "kitty"] {
+            assert!(terminal_sequence_includes_notification(backend));
+        }
+    }
+
+    #[test]
+    fn native_backend_writes_bell_and_keeps_native_notification() -> Result<()> {
+        // FR-002 A native fallback must both mark the terminal application and
+        // preserve the desktop notification that alerted the user before.
+        let mut tty = Vec::new();
+        let native_calls = Cell::new(0);
+        deliver_with("native", "Codex", "Done", Some(&mut tty), || {
+            native_calls.set(native_calls.get() + 1);
+            Ok(())
+        })?;
+        assert_eq!(tty, b"\x07");
+        assert_eq!(native_calls.get(), 1);
+        Ok(())
+    }
+
+    #[test]
+    fn failed_terminal_write_falls_back_to_native_notification() -> Result<()> {
+        // FR-002 A disappearing TTY must not suppress the native notification.
+        let mut tty = FailingWriter;
+        let native_calls = Cell::new(0);
+        deliver_with("ghostty", "Codex", "Done", Some(&mut tty), || {
+            native_calls.set(native_calls.get() + 1);
+            Ok(())
+        })?;
+        assert_eq!(native_calls.get(), 1);
+        Ok(())
+    }
+
+    #[test]
+    fn successful_terminal_protocol_does_not_duplicate_notification() -> Result<()> {
+        // FR-002 OSC notification protocols complete delivery without invoking
+        // the OS fallback a second time.
+        let mut tty = Vec::new();
+        let native_calls = Cell::new(0);
+        deliver_with("ghostty", "Codex", "Done", Some(&mut tty), || {
+            native_calls.set(native_calls.get() + 1);
+            Ok(())
+        })?;
+        assert_eq!(tty, b"\x07\x1b]777;notify;Codex;Done\x1b\\");
+        assert_eq!(native_calls.get(), 0);
+        Ok(())
     }
 
     #[test]

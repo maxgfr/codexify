@@ -83,9 +83,9 @@ Codex requires changed non-managed hooks to be reviewed. After enabling notifica
 - Ghostty: a standalone BEL for tab attention plus an OSC 777 desktop notification.
 - iTerm2 and WezTerm: OSC 9 notifications.
 - Kitty: OSC 99 title/body notifications.
-- Terminal.app and other macOS terminals: Notification Center through `osascript`.
-- Linux: terminal protocol when detected, otherwise `notify-send`.
-- WSL: PowerShell notification fallback.
+- Terminal.app and unknown macOS terminals: a BEL for application attention when available, plus Notification Center through `osascript`.
+- Linux: terminal protocol when detected, otherwise a BEL when available plus `notify-send`.
+- WSL: a BEL when available plus the PowerShell notification fallback.
 
 Codexify discards payloads identified as sub-agent events to avoid notification storms. `notify off` restores the previous notification method and focus condition exactly. For Ghostty, ensure notifications and badges are allowed for Ghostty in **System Settings → Notifications**, then run `codexify notify test` from the terminal. The bell marker remains visible on an unfocused tab until that tab receives focus.
 
