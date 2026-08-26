@@ -1,3 +1,10 @@
+## [0.2.3](https://github.com/maxgfr/codexify/compare/v0.2.2...v0.2.3) (2026-08-26)
+
+
+### Bug Fixes
+
+* diagnose broken Codex hook commands ([2d1ea94](https://github.com/maxgfr/codexify/commit/2d1ea9435aae184c23dff098b85b6908dcabe6ce))
+
 ## Unreleased
 
 ### Fixed
