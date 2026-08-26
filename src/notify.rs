@@ -325,7 +325,7 @@ pub fn terminal_sequence(backend: &str, title: &str, body: &str) -> Option<Vec<u
 }
 
 fn terminal_sequence_includes_notification(backend: &str) -> bool {
-    matches!(backend, "ghostty" | "iterm2" | "wezterm" | "kitty")
+    matches!(backend, "iterm2" | "wezterm" | "kitty")
 }
 
 fn sanitize(value: &str) -> String {
@@ -573,9 +573,10 @@ mod tests {
     fn terminal_protocols_do_not_duplicate_native_notifications() {
         // FR-002 These protocols already carry the desktop notification; only
         // BEL-only backends need the native notification fallback as well.
-        for backend in ["ghostty", "iterm2", "wezterm", "kitty"] {
+        for backend in ["iterm2", "wezterm", "kitty"] {
             assert!(terminal_sequence_includes_notification(backend));
         }
+        assert!(!terminal_sequence_includes_notification("ghostty"));
     }
 
     #[test]
@@ -607,9 +608,9 @@ mod tests {
     }
 
     #[test]
-    fn successful_terminal_protocol_does_not_duplicate_notification() -> Result<()> {
-        // FR-002 OSC notification protocols complete delivery without invoking
-        // the OS fallback a second time.
+    fn ghostty_keeps_a_native_fallback_after_writing_osc777() -> Result<()> {
+        // FR-002 Ghostty can accept OSC 777 without displaying a banner, so a
+        // successful terminal write must not suppress the native fallback.
         let mut tty = Vec::new();
         let native_calls = Cell::new(0);
         deliver_with("ghostty", "Codex", "Done", Some(&mut tty), || {
@@ -617,7 +618,7 @@ mod tests {
             Ok(())
         })?;
         assert_eq!(tty, b"\x07\x1b]777;notify;Codex;Done\x1b\\");
-        assert_eq!(native_calls.get(), 0);
+        assert_eq!(native_calls.get(), 1);
         Ok(())
     }
 

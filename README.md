@@ -80,7 +80,8 @@ Codex requires changed non-managed hooks to be reviewed. After enabling notifica
 
 ### Terminal support
 
-- Ghostty: a standalone BEL for tab attention plus an OSC 777 desktop notification.
+- Ghostty: a standalone BEL for tab attention, OSC 777, and a native desktop
+  fallback because accepting OSC 777 does not guarantee a visible banner.
 - iTerm2 and WezTerm: OSC 9 notifications.
 - Kitty: OSC 99 title/body notifications.
 - Terminal.app and unknown macOS terminals: a BEL for application attention when available, plus Notification Center through `osascript`.

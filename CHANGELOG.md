@@ -11,6 +11,8 @@
 
 - Detect malformed hook configuration, missing executables, and relative hook
   script paths in `codexify doctor`.
+- Preserve a native notification fallback when Ghostty accepts OSC 777 without
+  displaying a visible banner.
 
 ## [0.2.2](https://github.com/maxgfr/codexify/compare/v0.2.1...v0.2.2) (2026-08-26)
 
