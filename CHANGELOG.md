@@ -1,3 +1,10 @@
+## [0.2.4](https://github.com/maxgfr/codexify/compare/v0.2.3...v0.2.4) (2026-08-26)
+
+
+### Bug Fixes
+
+* keep native Ghostty notifications ([a178e7e](https://github.com/maxgfr/codexify/commit/a178e7ef24cc37cd458ba3b905037d772aa75b05))
+
 ## [0.2.3](https://github.com/maxgfr/codexify/compare/v0.2.2...v0.2.3) (2026-08-26)
 
 
