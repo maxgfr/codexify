@@ -215,6 +215,72 @@ fn failed_notification_install_remains_recoverable_by_purge() {
 }
 
 #[test]
+fn doctor_rejects_relative_hook_script_paths() {
+    // FR-006 global hooks must not depend on the session working directory.
+    let sandbox = Sandbox::new();
+    sandbox.script("codex", "exit 0");
+    sandbox.script("conforme", "exit 0");
+    fs::write(
+        sandbox.codex.join("hooks.json"),
+        r#"{
+  "hooks": {
+    "PostToolUse": [{
+      "matcher": ".*",
+      "hooks": [{
+        "type": "command",
+        "command": "node .agents/skills/impeccable/scripts/hook.mjs"
+      }]
+    }]
+  }
+}
+"#,
+    )
+    .unwrap();
+
+    sandbox
+        .command()
+        .arg("doctor")
+        .assert()
+        .failure()
+        .stdout(predicates::str::contains(
+            "[fail] hook command paths are portable",
+        ));
+}
+
+#[test]
+fn doctor_accepts_non_command_hook_handlers() {
+    // FR-006 portability checks apply only to command-backed hooks.
+    let sandbox = Sandbox::new();
+    sandbox.script("codex", "exit 0");
+    sandbox.script("conforme", "exit 0");
+    fs::write(
+        sandbox.codex.join("hooks.json"),
+        r#"{
+  "hooks": {
+    "PostToolUse": [{
+      "hooks": [{
+        "type": "mcp_tool",
+        "server": "scanner",
+        "tool": "scan"
+      }]
+    }]
+  }
+}
+"#,
+    )
+    .unwrap();
+
+    sandbox
+        .command()
+        .arg("doctor")
+        .assert()
+        .success()
+        .stdout(predicates::str::contains(
+            "[ok] hook command paths are portable",
+        ));
+}
+
+#[test]
 fn existing_callback_runs_even_when_codexify_delivery_fails() {
     // FR-002 preserve existing desktop callbacks across backend failures.
     let sandbox = Sandbox::new();

@@ -170,6 +170,10 @@ codexify config
 codexify --version
 ```
 
+`doctor` also parses `hooks.json` and rejects hook commands whose executable is
+missing or whose interpreter script path is relative to the session working
+directory.
+
 Codexify owns only `~/.codexify`. Every write to `~/.codex/config.toml` or `~/.codex/hooks.json` is parsed structurally, backed up under `~/.codexify/backups`, written through a same-directory temporary file, synced, and atomically renamed. Comments, ordering, unknown TOML keys, and non-Codexify hooks are preserved.
 
 ## Uninstall and restore

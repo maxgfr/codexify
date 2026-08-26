@@ -1,10 +1,16 @@
+## Unreleased
+
+### Fixed
+
+- Detect malformed hook configuration, missing executables, and relative hook
+  script paths in `codexify doctor`.
+
 ## [0.2.2](https://github.com/maxgfr/codexify/compare/v0.2.1...v0.2.2) (2026-08-26)
 
 
 ### Bug Fixes
 
 * preserve terminal application badges ([dc8a8e0](https://github.com/maxgfr/codexify/commit/dc8a8e0c7a02f0e5d8d3adfe9af3babce3991f8c))
-
 ## [0.2.1](https://github.com/maxgfr/codexify/compare/v0.2.0...v0.2.1) (2026-08-25)
 
 
