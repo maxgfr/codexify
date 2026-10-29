@@ -1,3 +1,10 @@
+## [0.2.6](https://github.com/maxgfr/codexify/compare/v0.2.5...v0.2.6) (2026-10-29)
+
+
+### Bug Fixes
+
+* use GPT-6 models for every default preset ([24ad846](https://github.com/maxgfr/codexify/commit/24ad846f54b727ec19ee262b92668e9432e1b13b))
+
 ## [0.2.5](https://github.com/maxgfr/codexify/compare/v0.2.4...v0.2.5) (2026-10-29)
 
 
