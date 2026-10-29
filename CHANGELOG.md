@@ -1,3 +1,10 @@
+## [0.2.5](https://github.com/maxgfr/codexify/compare/v0.2.4...v0.2.5) (2026-10-29)
+
+
+### Bug Fixes
+
+* refresh default Codex models and accept max/ultra effort ([c1f7c96](https://github.com/maxgfr/codexify/commit/c1f7c967d7008617bc2fc3f7224d84c8e068e69b))
+
 ## [0.2.4](https://github.com/maxgfr/codexify/compare/v0.2.3...v0.2.4) (2026-08-26)
 
 
