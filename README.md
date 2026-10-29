@@ -39,7 +39,7 @@ Codex's native model selection is untouched until you opt in:
 
 ```sh
 codexify use quality
-codexify use gpt-5.6-terra ultra
+codexify use gpt-6-luna max
 codexify reset
 
 codexify profile list
@@ -53,7 +53,7 @@ The editable presets live in `~/.codexify/profiles.toml`:
 
 | Preset | Default model | Effort |
 | --- | --- | --- |
-| `quality` | `gpt-5.6-terra` | `xhigh` |
+| `quality` | `gpt-6-luna` | `xhigh` |
 | `balanced` | `gpt-6-luna` | `medium` |
 | `fast` | `gpt-6-luna` | `low` |
 

@@ -39,7 +39,7 @@ impl ProfileFile {
             (
                 "quality".to_owned(),
                 Profile {
-                    model: "gpt-5.6-terra".to_owned(),
+                    model: "gpt-6-luna".to_owned(),
                     effort: Some("xhigh".to_owned()),
                 },
             ),

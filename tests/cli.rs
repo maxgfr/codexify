@@ -71,7 +71,7 @@ fn model_selection_preserves_unknown_toml_and_reset_restores_native_state() {
     let selected = fs::read_to_string(sandbox.codex.join("config.toml")).unwrap();
     assert!(selected.contains("# user comment"));
     assert!(selected.contains("custom_key = \"keep\""));
-    assert!(selected.contains("model = \"gpt-5.6-terra\""));
+    assert!(selected.contains("model = \"gpt-6-luna\""));
     assert!(selected.contains("model_reasoning_effort = \"xhigh\""));
 
     sandbox.command().arg("reset").assert().success();
@@ -88,11 +88,11 @@ fn effort_selection_accepts_current_codex_levels() {
     let sandbox = Sandbox::new();
     sandbox
         .command()
-        .args(["use", "gpt-5.6-terra", "ultra"])
+        .args(["use", "gpt-test", "ultra"])
         .assert()
         .success();
     let selected = fs::read_to_string(sandbox.codex.join("config.toml")).unwrap();
-    assert!(selected.contains("model = \"gpt-5.6-terra\""));
+    assert!(selected.contains("model = \"gpt-test\""));
     assert!(selected.contains("model_reasoning_effort = \"ultra\""));
 
     sandbox
