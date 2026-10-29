@@ -26,7 +26,7 @@ Prebuilt release binaries are available for macOS and Linux on ARM64 and x86-64.
 ```sh
 codexify
 codexify exec "explain this repository"
-codexify --model gpt-5.6-luna
+codexify --model gpt-6-luna
 codexify --caffeine
 codexify --caffeine=display exec "run the test suite"
 ```
@@ -39,12 +39,12 @@ Codex's native model selection is untouched until you opt in:
 
 ```sh
 codexify use quality
-codexify use gpt-5.6-terra high
+codexify use gpt-5.6-terra ultra
 codexify reset
 
 codexify profile list
 codexify profile show balanced
-codexify profile add review gpt-5.6 high
+codexify profile add review gpt-6-luna max
 codexify profile use review
 codexify profile remove review
 ```
@@ -53,11 +53,11 @@ The editable presets live in `~/.codexify/profiles.toml`:
 
 | Preset | Default model | Effort |
 | --- | --- | --- |
-| `quality` | `gpt-5.6` | `xhigh` |
-| `balanced` | `gpt-5.6` | `medium` |
-| `fast` | `gpt-5.6-luna` | `medium` |
+| `quality` | `gpt-5.6-terra` | `xhigh` |
+| `balanced` | `gpt-6-luna` | `medium` |
+| `fast` | `gpt-6-luna` | `low` |
 
-Model names and availability evolve; edit the file to match your account. The [official model guide](https://developers.openai.com/api/docs/guides/latest-model) explains the current GPT-5.6 aliases. `reset` restores the exact pre-Codexify `model` and `model_reasoning_effort` values, including absence.
+Accepted efforts are `minimal`, `low`, `medium`, `high`, `xhigh`, `max`, and `ultra`; each model supports a subset. Model names and availability evolve; edit the file to match your account. The models your Codex account can use are listed in the `/model` picker, and the [official model guide](https://developers.openai.com/api/docs/guides/latest-model) explains the current aliases. `reset` restores the exact pre-Codexify `model` and `model_reasoning_effort` values, including absence.
 
 ## Reliable notifications
 

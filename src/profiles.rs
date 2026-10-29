@@ -25,21 +25,21 @@ impl ProfileFile {
             (
                 "balanced".to_owned(),
                 Profile {
-                    model: "gpt-5.6".to_owned(),
+                    model: "gpt-6-luna".to_owned(),
                     effort: Some("medium".to_owned()),
                 },
             ),
             (
                 "fast".to_owned(),
                 Profile {
-                    model: "gpt-5.6-luna".to_owned(),
-                    effort: Some("medium".to_owned()),
+                    model: "gpt-6-luna".to_owned(),
+                    effort: Some("low".to_owned()),
                 },
             ),
             (
                 "quality".to_owned(),
                 Profile {
-                    model: "gpt-5.6".to_owned(),
+                    model: "gpt-5.6-terra".to_owned(),
                     effort: Some("xhigh".to_owned()),
                 },
             ),
@@ -178,8 +178,13 @@ fn validate_name(value: &str, label: &str) -> Result<()> {
 }
 
 fn validate_effort(value: &str) -> Result<()> {
-    if !matches!(value, "minimal" | "low" | "medium" | "high" | "xhigh") {
-        bail!("invalid effort '{value}' (expected minimal, low, medium, high, or xhigh)");
+    if !matches!(
+        value,
+        "minimal" | "low" | "medium" | "high" | "xhigh" | "max" | "ultra"
+    ) {
+        bail!(
+            "invalid effort '{value}' (expected minimal, low, medium, high, xhigh, max, or ultra)"
+        );
     }
     Ok(())
 }

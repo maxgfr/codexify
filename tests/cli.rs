@@ -71,7 +71,7 @@ fn model_selection_preserves_unknown_toml_and_reset_restores_native_state() {
     let selected = fs::read_to_string(sandbox.codex.join("config.toml")).unwrap();
     assert!(selected.contains("# user comment"));
     assert!(selected.contains("custom_key = \"keep\""));
-    assert!(selected.contains("model = \"gpt-5.6\""));
+    assert!(selected.contains("model = \"gpt-5.6-terra\""));
     assert!(selected.contains("model_reasoning_effort = \"xhigh\""));
 
     sandbox.command().arg("reset").assert().success();
@@ -80,6 +80,39 @@ fn model_selection_preserves_unknown_toml_and_reset_restores_native_state() {
         original
     );
     assert!(sandbox.state.join("backups").is_dir());
+}
+
+#[test]
+fn effort_selection_accepts_current_codex_levels() {
+    // FR-001 efforts track the levels advertised by Codex's model catalog.
+    let sandbox = Sandbox::new();
+    sandbox
+        .command()
+        .args(["use", "gpt-5.6-terra", "ultra"])
+        .assert()
+        .success();
+    let selected = fs::read_to_string(sandbox.codex.join("config.toml")).unwrap();
+    assert!(selected.contains("model = \"gpt-5.6-terra\""));
+    assert!(selected.contains("model_reasoning_effort = \"ultra\""));
+
+    sandbox
+        .command()
+        .args(["profile", "add", "deep", "gpt-6-luna", "max"])
+        .assert()
+        .success();
+    sandbox
+        .command()
+        .args(["profile", "show", "deep"])
+        .assert()
+        .success()
+        .stdout(predicates::str::contains("effort = max"));
+
+    sandbox
+        .command()
+        .args(["use", "gpt-6-luna", "turbo"])
+        .assert()
+        .failure()
+        .stderr(predicates::str::contains("invalid effort 'turbo'"));
 }
 
 #[test]
